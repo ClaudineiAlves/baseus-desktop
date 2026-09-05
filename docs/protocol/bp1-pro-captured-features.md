@@ -44,13 +44,13 @@ The full frames are embedded verbatim in
 `BA 8C <side> FF`. All wire values below are confirmed live from the vendor app
 (they do NOT match the SDK KeyType/KeyFunction enums).
 
-Keys (gesture type): `00` Triple Tap, `01` Long Press, `02` Tap & Hold,
-`03` Double Tap.
+Keys (gesture type), confirmed live: `00` Triple Tap, `01` Long Press,
+`02` Tap & Hold, `03` One Tap. (No separate double tap on this model. One Tap
+only accepts None / Play-Pause.)
 
-Functions confirmed: `00` None, `01` Next, `02` Previous, `06` ANC Mode,
-`0b` Volume Up. The app offers a few more (Play/Pause, Volume Down, Assistant)
-whose bytes were not captured — the earbud acks any 0x8d frame, so they can't be
-found by probing.
+Functions (the app's own table, all confirmed live): `00` None, `01` Play/Pause,
+`02` Previous, `03` Next, `04` Assistant, `06` ANC Mode, `0b` Volume Up,
+`0c` Volume Down.
 
 `0x8e` frames (`BA 8E 00 <slot> 06`) appear while the gesture screen is open; they
 look like per-slot reads, not the set command.

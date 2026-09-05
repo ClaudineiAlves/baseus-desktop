@@ -248,20 +248,20 @@ impl GestureSide {
 }
 
 /// The tap/press a gesture responds to. Wire byte in `BA 8D <side> <key> <func>`,
-/// all four confirmed live from the vendor app (not the SDK KeyType enum, which
-/// numbers them differently).
+/// all four confirmed live. The BP1 Pro exposes these four (no separate double tap);
+/// One Tap only accepts None / Play-Pause.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GestureKey {
     TripleTap = 0x00,
     LongPress = 0x01,
     TapHold = 0x02,
-    DoubleTap = 0x03,
+    OneTap = 0x03,
 }
 
 impl GestureKey {
     pub const ALL: [GestureKey; 4] = [
-        Self::DoubleTap,
+        Self::OneTap,
         Self::TripleTap,
         Self::LongPress,
         Self::TapHold,
@@ -274,40 +274,52 @@ impl GestureKey {
             0x00 => Some(Self::TripleTap),
             0x01 => Some(Self::LongPress),
             0x02 => Some(Self::TapHold),
-            0x03 => Some(Self::DoubleTap),
+            0x03 => Some(Self::OneTap),
             _ => None,
         }
     }
     pub fn label(self) -> &'static str {
         match self {
-            Self::DoubleTap => "Double Tap",
+            Self::OneTap => "One Tap",
             Self::TripleTap => "Triple Tap",
             Self::LongPress => "Long Press",
             Self::TapHold => "Tap & Hold",
         }
     }
+    /// Functions this gesture accepts. One Tap is limited to None / Play-Pause in the
+    /// vendor app; the rest take the full table.
+    pub fn functions(self) -> &'static [GestureFunction] {
+        match self {
+            Self::OneTap => &[GestureFunction::None, GestureFunction::PlayPause],
+            _ => &GestureFunction::ALL,
+        }
+    }
 }
 
-/// What a gesture does. Wire bytes confirmed live from the vendor app (this is the
-/// app's own gesture-function table, not the SDK KeyFunction enum). Only the values
-/// verified on hardware are listed; the app offers a few more (Play/Pause, Volume
-/// Down, Assistant) whose bytes were not captured.
+/// What a gesture does. Wire bytes confirmed live from the vendor app (the app's own
+/// gesture-function table, not the SDK KeyFunction enum).
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GestureFunction {
     None = 0x00,
-    Next = 0x01,
+    PlayPause = 0x01,
     Previous = 0x02,
+    Next = 0x03,
+    Assistant = 0x04,
     AncMode = 0x06,
     VolumeUp = 0x0b,
+    VolumeDown = 0x0c,
 }
 
 impl GestureFunction {
-    pub const ALL: [GestureFunction; 5] = [
+    pub const ALL: [GestureFunction; 8] = [
         Self::None,
-        Self::Next,
+        Self::PlayPause,
         Self::Previous,
+        Self::Next,
         Self::VolumeUp,
+        Self::VolumeDown,
+        Self::Assistant,
         Self::AncMode,
     ];
     pub fn to_byte(self) -> u8 {
@@ -319,10 +331,13 @@ impl GestureFunction {
     pub fn label(self) -> &'static str {
         match self {
             Self::None => "None",
-            Self::Next => "Next",
+            Self::PlayPause => "Play / Pause",
             Self::Previous => "Previous",
+            Self::Next => "Next",
+            Self::Assistant => "Assistant",
             Self::AncMode => "ANC Mode",
             Self::VolumeUp => "Volume Up",
+            Self::VolumeDown => "Volume Down",
         }
     }
 }

@@ -1,28 +1,20 @@
 import { createSignal, onMount, For } from 'solid-js';
-import { getGestureOptions, setGesture } from '../lib/tauri';
+import { getGestureOptions, setGesture, type GestureOption } from '../lib/tauri';
 
 // Module-level so the picked assignments survive switching tabs (the tab remounts).
 // It reflects what we last sent, not a read-back from the earbud.
 const [chosen, setChosen] = createSignal<Record<string, number>>({});
 
-type Opt = [number, string];
-type Side = { id: number; name: string };
-
-const SIDES: Side[] = [
+const SIDES = [
   { id: 0, name: 'Left' },
   { id: 1, name: 'Right' },
 ];
 
-// One assignment cell keeps its own selected function per (side, key); the earbud
-// stores it, so this is the last value we sent rather than a read-back.
 export default function GestureTab() {
-  const [keys, setKeys] = createSignal<Opt[]>([]);
-  const [funcs, setFuncs] = createSignal<Opt[]>([]);
+  const [gestures, setGestures] = createSignal<GestureOption[]>([]);
 
   onMount(async () => {
-    const [k, f] = await getGestureOptions().catch(() => [[], []] as [Opt[], Opt[]]);
-    setKeys(k);
-    setFuncs(f);
+    setGestures(await getGestureOptions().catch(() => []));
   });
 
   async function pick(side: number, key: number, func: number) {
@@ -33,8 +25,8 @@ export default function GestureTab() {
   return (
     <div style={{ display: 'flex', 'flex-direction': 'column', gap: '18px' }}>
       <div style={hintStyle}>
-        Confirmed on this earbud. The vendor app offers a few more functions
-        (Play/Pause, Volume Down, Assistant) not captured here.
+        Tap types and functions confirmed on this earbud. One Tap only offers None and
+        Play / Pause.
       </div>
       <For each={SIDES}>
         {(side) => (
@@ -43,8 +35,8 @@ export default function GestureTab() {
               {side.name} Earbud <Divider />
             </div>
             <div style={{ display: 'flex', 'flex-direction': 'column', gap: '10px' }}>
-              <For each={keys()}>
-                {([keyByte, keyName]) => (
+              <For each={gestures()}>
+                {(g) => (
                   <div>
                     <div
                       style={{
@@ -54,15 +46,15 @@ export default function GestureTab() {
                         'margin-bottom': '6px',
                       }}
                     >
-                      {keyName}
+                      {g.label}
                     </div>
                     <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: '6px' }}>
-                      <For each={funcs()}>
+                      <For each={g.functions}>
                         {([fByte, fName]) => {
-                          const active = () => chosen()[`${side.id}:${keyByte}`] === fByte;
+                          const active = () => chosen()[`${side.id}:${g.key}`] === fByte;
                           return (
                             <button
-                              onClick={() => pick(side.id, keyByte, fByte)}
+                              onClick={() => pick(side.id, g.key, fByte)}
                               style={{
                                 border: active()
                                   ? '1px solid rgba(99,102,241,0.5)'

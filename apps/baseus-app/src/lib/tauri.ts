@@ -110,10 +110,13 @@ export function setGesture(side: number, key: number, func: number): Promise<voi
   return invoke('set_gesture', { side, key, function: func });
 }
 
-// Returns [keys, functions], each a list of [byte, label].
-export function getGestureOptions(): Promise<
-  [Array<[number, string]>, Array<[number, string]>]
-> {
+export interface GestureOption {
+  key: number;
+  label: string;
+  functions: Array<[number, string]>;
+}
+
+export function getGestureOptions(): Promise<GestureOption[]> {
   return invoke('get_gesture_options');
 }
 
