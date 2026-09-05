@@ -3,7 +3,7 @@ use std::time::Duration;
 use baseus_protocol::{
     framing::Frame,
     models::bp1_pro_anc::Bp1ProAnc,
-    types::{AncMode, BaseusModel, DeviceEvent, EqPreset},
+    types::{AncMode, BaseusModel, DeviceEvent, DynamicMode, EqMode, EqPreset, SpatialMode},
 };
 use baseus_transport::{win::ble::GattTransport, DeviceMatch};
 use serde::Serialize;
@@ -24,6 +24,9 @@ struct BatteryThresholds {
 pub enum DeviceCommand {
     SetAncMode(AncMode, u8),
     SetEqPreset(EqPreset),
+    SetSpatialMode(SpatialMode),
+    SetDynamicMode(DynamicMode),
+    SetEqMode(EqMode),
     SetGameMode(bool),
     FindEarbud(Side),
 }
@@ -191,6 +194,17 @@ async fn notification_loop(
                             DeviceCommand::SetGameMode(on) => {
                                 let _ = app.emit("device-event", &DeviceEvent::GameModeUpdate(*on));
                             }
+                            // Optimistic echoes: these features send no reliable state
+                            // notification back, so reflect the commanded value at once.
+                            DeviceCommand::SetSpatialMode(m) => {
+                                let _ = app.emit("device-event", &DeviceEvent::SpatialModeUpdate(*m));
+                            }
+                            DeviceCommand::SetDynamicMode(m) => {
+                                let _ = app.emit("device-event", &DeviceEvent::DynamicModeUpdate(*m));
+                            }
+                            DeviceCommand::SetEqMode(m) => {
+                                let _ = app.emit("device-event", &DeviceEvent::EqModeUpdate(*m));
+                            }
                             DeviceCommand::FindEarbud(side) => {
                                 let tx = find_stop_tx.clone();
                                 let side = side.clone();
@@ -238,6 +252,18 @@ async fn execute_command(
         (DeviceCommand::SetEqPreset(preset), BaseusModel::Bp1ProAnc) => {
             vec![0xBA, 0x43, preset.to_byte()]
         }
+        // Spatial Audio (0x43) — captured from the vendor app. Note this is the same
+        // opcode the upstream code mislabels as "EQ preset"; on the BP1 Pro it selects
+        // the spatial mode.
+        (DeviceCommand::SetSpatialMode(mode), BaseusModel::Bp1ProAnc) => {
+            vec![0xBA, 0x43, mode.to_byte()]
+        }
+        // Dynamic Sound (0x92) — trailing 0x03 is the constant the app always sends.
+        (DeviceCommand::SetDynamicMode(mode), BaseusModel::Bp1ProAnc) => {
+            vec![0xBA, 0x92, mode.to_byte(), 0x03]
+        }
+        // EQ mode (0x31) — replay the captured 51-byte preset frame verbatim.
+        (DeviceCommand::SetEqMode(mode), BaseusModel::Bp1ProAnc) => mode.frame().to_vec(),
         // Game/low-latency mode — verified for BP1 over both SPP and BLE (issue #3).
         (DeviceCommand::SetGameMode(on), BaseusModel::Bp1ProAnc) => {
             vec![0xBA, 0x24, u8::from(*on)]

@@ -1,6 +1,6 @@
 use crate::device::{CommandSender, DeviceCommand, Side};
 use crate::settings::{self, Settings};
-use baseus_protocol::types::{AncMode, BaseusModel, EqPreset};
+use baseus_protocol::types::{AncMode, BaseusModel, DynamicMode, EqMode, EqPreset, SpatialMode};
 use tauri::{AppHandle, Runtime, State};
 use tauri_plugin_autostart::ManagerExt;
 #[cfg(not(target_os = "linux"))]
@@ -30,6 +30,39 @@ pub fn set_eq_preset(preset: u8, cmd_tx: State<CommandSender>) -> Result<(), Str
     cmd_tx
         .send(DeviceCommand::SetEqPreset(eq))
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn set_spatial_mode(mode: u8, cmd_tx: State<CommandSender>) -> Result<(), String> {
+    let m = SpatialMode::from_byte(mode).ok_or_else(|| format!("unknown spatial mode: {mode}"))?;
+    cmd_tx
+        .send(DeviceCommand::SetSpatialMode(m))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn set_dynamic_mode(mode: u8, cmd_tx: State<CommandSender>) -> Result<(), String> {
+    let m = DynamicMode::from_byte(mode).ok_or_else(|| format!("unknown dynamic mode: {mode}"))?;
+    cmd_tx
+        .send(DeviceCommand::SetDynamicMode(m))
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn set_eq_mode(id: u8, cmd_tx: State<CommandSender>) -> Result<(), String> {
+    let m = EqMode::from_id(id).ok_or_else(|| format!("unknown EQ mode id: {id}"))?;
+    cmd_tx
+        .send(DeviceCommand::SetEqMode(m))
+        .map_err(|e| e.to_string())
+}
+
+/// The EQ-mode presets (id + label) for the frontend to render.
+#[tauri::command]
+pub fn get_eq_modes() -> Vec<(u8, String)> {
+    EqMode::ALL
+        .iter()
+        .map(|m| (m.id(), m.label().to_string()))
+        .collect()
 }
 
 #[tauri::command]

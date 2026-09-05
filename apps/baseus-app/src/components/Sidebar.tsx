@@ -1,6 +1,6 @@
 import { createEffect, onMount } from 'solid-js';
 
-export type Tab = 'home' | 'anc' | 'eq' | 'settings';
+export type Tab = 'home' | 'anc' | 'sound' | 'settings';
 
 interface Props {
   active: Tab;
@@ -11,7 +11,7 @@ interface Props {
 const NAV: Array<{ tab: Tab; icon: string; label: string }> = [
   { tab: 'home', icon: '⊙', label: 'Battery' },
   { tab: 'anc',  icon: '◎', label: 'Noise Control' },
-  { tab: 'eq',   icon: '≋', label: 'EQ' },
+  { tab: 'sound', icon: '≋', label: 'Sound' },
 ];
 
 export default function Sidebar(props: Props) {

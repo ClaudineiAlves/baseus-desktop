@@ -2,19 +2,21 @@ import { createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import Sidebar, { type Tab } from './components/Sidebar';
 import HomeTab from './components/HomeTab';
 import AncTab from './components/AncTab';
-import EqTab from './components/EqTab';
+import SoundTab from './components/SoundTab';
 import SettingsTab from './components/SettingsTab';
 import { initColorScheme } from './lib/scheme';
+import type { SpatialMode, DynamicMode } from './lib/tauri';
 import {
   onDeviceEvent,
   onConnectionState,
   onModelInfo,
   onUpdateAvailable,
   setAncMode,
-  setEqPreset,
+  setSpatialMode,
+  setDynamicMode,
+  setEqMode,
   setGameMode,
   type AncMode,
-  type EqPreset,
   type ModelInfo,
   type WearState,
 } from './lib/tauri';
@@ -38,7 +40,9 @@ export default function App() {
   const [rightCharging, setRightCharging] = createSignal(false);
   const [caseCharging, setCaseCharging] = createSignal(false);
   const [wear, setWear] = createSignal<WearState | null>(null);
-  const [eqPreset, setEqPresetSignal] = createSignal<EqPreset>('balanced');
+  const [spatial, setSpatialSignal] = createSignal<SpatialMode>('normal');
+  const [dynamic, setDynamicSignal] = createSignal<DynamicMode>('normal');
+  const [eqId, setEqIdSignal] = createSignal<number | null>(null);
   const [updateVersion, setUpdateVersion] = createSignal<string | null>(null);
 
   const connectedModelName = createMemo(() => modelInfo()?.name ?? 'Bass BP1 Pro ANC');
@@ -78,6 +82,10 @@ export default function App() {
         setGameModeSignal(e.data);
       } else if (e.type === 'wear_update') {
         setWear(e.data);
+      } else if (e.type === 'spatial_mode_update') {
+        setSpatialSignal(e.data);
+      } else if (e.type === 'dynamic_mode_update') {
+        setDynamicSignal(e.data);
       }
     }).then((fn) => unlisteners.push(fn));
 
@@ -112,10 +120,22 @@ export default function App() {
     await setGameMode(on).catch(() => setGameModeSignal(!on));
   }
 
-  async function handleEqPreset(preset: EqPreset) {
-    if (eqPreset() === preset) return;
-    setEqPresetSignal(preset);
-    await setEqPreset(preset).catch(() => {});
+  async function handleSpatial(m: SpatialMode) {
+    const prev = spatial();
+    setSpatialSignal(m);
+    await setSpatialMode(m).catch(() => setSpatialSignal(prev));
+  }
+
+  async function handleDynamic(m: DynamicMode) {
+    const prev = dynamic();
+    setDynamicSignal(m);
+    await setDynamicMode(m).catch(() => setDynamicSignal(prev));
+  }
+
+  async function handleEqMode(id: number) {
+    const prev = eqId();
+    setEqIdSignal(id);
+    await setEqMode(id).catch(() => setEqIdSignal(prev));
   }
 
   function handleLevel(v: number) {
@@ -222,9 +242,16 @@ export default function App() {
             </div>
           </Show>
 
-          <Show when={activeTab() === 'eq'}>
+          <Show when={activeTab() === 'sound'}>
             <div class="panel-in">
-              <EqTab preset={eqPreset()} onPreset={handleEqPreset} />
+              <SoundTab
+                spatial={spatial()}
+                dynamic={dynamic()}
+                eqId={eqId()}
+                onSpatial={handleSpatial}
+                onDynamic={handleDynamic}
+                onEq={handleEqMode}
+              />
             </div>
           </Show>
 

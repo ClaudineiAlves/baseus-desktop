@@ -20,6 +20,19 @@ fn command_bytes(arg: &str) -> Option<Vec<u8>> {
         "eq:bass" => vec![0xBA, 0x43, 0x01],
         "game:on" => vec![0xBA, 0x24, 0x01],
         "game:off" => vec![0xBA, 0x24, 0x00],
+        "spatial:normal" => vec![0xBA, 0x43, 0x00],
+        "spatial:music" => vec![0xBA, 0x43, 0x01],
+        "spatial:cinema" => vec![0xBA, 0x43, 0x02],
+        "dynamic:normal" => vec![0xBA, 0x92, 0x00, 0x03],
+        "dynamic:bass" => vec![0xBA, 0x92, 0x01, 0x03],
+        "dynamic:balance" => vec![0xBA, 0x92, 0x02, 0x03],
+        "eq:deepbass" => baseus_protocol::types::EqMode::DeepBass.frame().to_vec(),
+        "eq:jazz" => baseus_protocol::types::EqMode::Jazz.frame().to_vec(),
+        "eq:classical" => baseus_protocol::types::EqMode::Classical.frame().to_vec(),
+        "eq:treble" => baseus_protocol::types::EqMode::TrebleBoost.frame().to_vec(),
+        "eq:classic" => baseus_protocol::types::EqMode::BaseusClassic
+            .frame()
+            .to_vec(),
         _ => return None,
     })
 }

@@ -71,6 +71,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::set_anc_mode,
             commands::set_eq_preset,
+            commands::set_spatial_mode,
+            commands::set_dynamic_mode,
+            commands::set_eq_mode,
+            commands::get_eq_modes,
             commands::set_game_mode,
             commands::find_earbud,
             commands::get_settings,
