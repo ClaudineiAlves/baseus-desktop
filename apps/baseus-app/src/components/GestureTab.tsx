@@ -1,6 +1,10 @@
 import { createSignal, onMount, For } from 'solid-js';
 import { getGestureOptions, setGesture } from '../lib/tauri';
 
+// Module-level so the picked assignments survive switching tabs (the tab remounts).
+// It reflects what we last sent, not a read-back from the earbud.
+const [chosen, setChosen] = createSignal<Record<string, number>>({});
+
 type Opt = [number, string];
 type Side = { id: number; name: string };
 
@@ -14,7 +18,6 @@ const SIDES: Side[] = [
 export default function GestureTab() {
   const [keys, setKeys] = createSignal<Opt[]>([]);
   const [funcs, setFuncs] = createSignal<Opt[]>([]);
-  const [chosen, setChosen] = createSignal<Record<string, number>>({});
 
   onMount(async () => {
     const [k, f] = await getGestureOptions().catch(() => [[], []] as [Opt[], Opt[]]);
@@ -30,8 +33,8 @@ export default function GestureTab() {
   return (
     <div style={{ display: 'flex', 'flex-direction': 'column', gap: '18px' }}>
       <div style={hintStyle}>
-        Double Tap is confirmed on hardware; the other gestures follow the vendor SDK's
-        key table.
+        Confirmed on this earbud. The vendor app offers a few more functions
+        (Play/Pause, Volume Down, Assistant) not captured here.
       </div>
       <For each={SIDES}>
         {(side) => (

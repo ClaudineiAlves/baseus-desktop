@@ -65,6 +65,21 @@ export default function App() {
     rescale();
     window.addEventListener('resize', rescale);
     unlisteners.push(() => window.removeEventListener('resize', rescale));
+
+    // Number keys jump between tabs (1 Battery … 5 Settings).
+    const TAB_KEYS: Record<string, Tab> = {
+      '1': 'home',
+      '2': 'anc',
+      '3': 'sound',
+      '4': 'gesture',
+      '5': 'settings',
+    };
+    const onKey = (e: KeyboardEvent) => {
+      const t = TAB_KEYS[e.key];
+      if (t && !e.ctrlKey && !e.metaKey && !e.altKey) setActiveTab(t);
+    };
+    window.addEventListener('keydown', onKey);
+    unlisteners.push(() => window.removeEventListener('keydown', onKey));
     await loadSettings();
 
     onDeviceEvent((e) => {

@@ -38,12 +38,22 @@ Presets (id byte at offset 2):
 The full frames are embedded verbatim in
 `crates/baseus-protocol/src/types.rs` (`EqMode::frame`).
 
-## Gesture — opcode `0x8d` (captured, not yet implemented)
+## Gesture — opcode `0x8d`
 
-`BA 8d <side> <key> <function>` — side `00` left / `01` right; `key` a per-side
-gesture id (e.g. `03` = double tap); `function` from the SDK `KeyFunction` enum
-(0 None, 1 Recall, 2 Assistant, 3 Prev, 4 Next, 5 Vol+, 6 Vol-, 7 Play/Pause,
-8 Game mode, 9 ANC mode). Query is `BA 8c <side> ff`.
+`BA 8D <side> <key> <function>` — side `00` left / `01` right. Query is
+`BA 8C <side> FF`. All wire values below are confirmed live from the vendor app
+(they do NOT match the SDK KeyType/KeyFunction enums).
+
+Keys (gesture type): `00` Triple Tap, `01` Long Press, `02` Tap & Hold,
+`03` Double Tap.
+
+Functions confirmed: `00` None, `01` Next, `02` Previous, `06` ANC Mode,
+`0b` Volume Up. The app offers a few more (Play/Pause, Volume Down, Assistant)
+whose bytes were not captured — the earbud acks any 0x8d frame, so they can't be
+found by probing.
+
+`0x8e` frames (`BA 8E 00 <slot> 06`) appear while the gesture screen is open; they
+look like per-slot reads, not the set command.
 
 ## Notes
 

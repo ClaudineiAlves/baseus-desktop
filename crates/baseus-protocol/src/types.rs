@@ -247,74 +247,67 @@ impl GestureSide {
     }
 }
 
-/// The tap/press a gesture responds to. The wire byte is the SDK `KeyType` LEFT_* value;
-/// `DoubleTap` (0x03) is confirmed live from the vendor app, the others match the APK
-/// `KeyType` enum (SINGLE=1, DOUBLE=3, TRIPLE=5, LONG_PRESS=7) with `side` selecting the bud.
+/// The tap/press a gesture responds to. Wire byte in `BA 8D <side> <key> <func>`,
+/// all four confirmed live from the vendor app (not the SDK KeyType enum, which
+/// numbers them differently).
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GestureKey {
-    SingleTap = 1,
-    DoubleTap = 3,
-    TripleTap = 5,
-    LongPress = 7,
+    TripleTap = 0x00,
+    LongPress = 0x01,
+    TapHold = 0x02,
+    DoubleTap = 0x03,
 }
 
 impl GestureKey {
     pub const ALL: [GestureKey; 4] = [
-        Self::SingleTap,
         Self::DoubleTap,
         Self::TripleTap,
         Self::LongPress,
+        Self::TapHold,
     ];
     pub fn to_byte(self) -> u8 {
         self as u8
     }
     pub fn from_byte(b: u8) -> Option<Self> {
         match b {
-            1 => Some(Self::SingleTap),
-            3 => Some(Self::DoubleTap),
-            5 => Some(Self::TripleTap),
-            7 => Some(Self::LongPress),
+            0x00 => Some(Self::TripleTap),
+            0x01 => Some(Self::LongPress),
+            0x02 => Some(Self::TapHold),
+            0x03 => Some(Self::DoubleTap),
             _ => None,
         }
     }
     pub fn label(self) -> &'static str {
         match self {
-            Self::SingleTap => "Single Tap",
             Self::DoubleTap => "Double Tap",
             Self::TripleTap => "Triple Tap",
             Self::LongPress => "Long Press",
+            Self::TapHold => "Tap & Hold",
         }
     }
 }
 
-/// What a gesture does. Values are the SDK `KeyFunction` enum, extracted from the APK.
+/// What a gesture does. Wire bytes confirmed live from the vendor app (this is the
+/// app's own gesture-function table, not the SDK KeyFunction enum). Only the values
+/// verified on hardware are listed; the app offers a few more (Play/Pause, Volume
+/// Down, Assistant) whose bytes were not captured.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GestureFunction {
-    None = 0,
-    Recall = 1,
-    Assistant = 2,
-    Previous = 3,
-    Next = 4,
-    VolumeUp = 5,
-    VolumeDown = 6,
-    PlayPause = 7,
-    GameMode = 8,
-    AncMode = 9,
+    None = 0x00,
+    Next = 0x01,
+    Previous = 0x02,
+    AncMode = 0x06,
+    VolumeUp = 0x0b,
 }
 
 impl GestureFunction {
-    pub const ALL: [GestureFunction; 10] = [
+    pub const ALL: [GestureFunction; 5] = [
         Self::None,
-        Self::Recall,
-        Self::Assistant,
-        Self::Previous,
         Self::Next,
+        Self::Previous,
         Self::VolumeUp,
-        Self::VolumeDown,
-        Self::PlayPause,
-        Self::GameMode,
         Self::AncMode,
     ];
     pub fn to_byte(self) -> u8 {
@@ -326,15 +319,10 @@ impl GestureFunction {
     pub fn label(self) -> &'static str {
         match self {
             Self::None => "None",
-            Self::Recall => "Voice Recall",
-            Self::Assistant => "Assistant",
-            Self::Previous => "Previous",
             Self::Next => "Next",
-            Self::VolumeUp => "Volume Up",
-            Self::VolumeDown => "Volume Down",
-            Self::PlayPause => "Play / Pause",
-            Self::GameMode => "Game Mode",
+            Self::Previous => "Previous",
             Self::AncMode => "ANC Mode",
+            Self::VolumeUp => "Volume Up",
         }
     }
 }
