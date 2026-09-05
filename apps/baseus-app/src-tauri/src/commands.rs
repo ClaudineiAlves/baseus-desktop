@@ -87,18 +87,29 @@ pub fn set_gesture(
 /// A (wire byte, label) pair for a frontend picker.
 type LabeledByte = (u8, String);
 
-/// Gesture keys (tap types) and functions for the frontend to render.
+/// One gesture (tap type) with the functions it accepts — One Tap is limited to
+/// None / Play-Pause, the rest take the full table.
+#[derive(serde::Serialize)]
+pub struct GestureOption {
+    key: u8,
+    label: String,
+    functions: Vec<LabeledByte>,
+}
+
 #[tauri::command]
-pub fn get_gesture_options() -> (Vec<LabeledByte>, Vec<LabeledByte>) {
-    let keys = GestureKey::ALL
+pub fn get_gesture_options() -> Vec<GestureOption> {
+    GestureKey::ALL
         .iter()
-        .map(|k| (k.to_byte(), k.label().to_string()))
-        .collect();
-    let funcs = GestureFunction::ALL
-        .iter()
-        .map(|f| (f.to_byte(), f.label().to_string()))
-        .collect();
-    (keys, funcs)
+        .map(|k| GestureOption {
+            key: k.to_byte(),
+            label: k.label().to_string(),
+            functions: k
+                .functions()
+                .iter()
+                .map(|f| (f.to_byte(), f.label().to_string()))
+                .collect(),
+        })
+        .collect()
 }
 
 #[tauri::command]
