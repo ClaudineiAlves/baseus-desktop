@@ -57,14 +57,14 @@ export default function SettingsTab(props: Props) {
         value={getSettingsStore().launch_at_login}
         onChange={(v) => updateSetting('launch_at_login', v)}
       />
-      <div style={{ height: '1px', background: '#131315' }} />
+      <div style={{ height: '1px', background: 'var(--surface-1)' }} />
       <Toggle
         label="Low battery alerts"
         desc="Notify when a bud drops below 20%"
         value={getSettingsStore().low_battery_alerts}
         onChange={(v) => updateSetting('low_battery_alerts', v)}
       />
-      <div style={{ height: '1px', background: '#131315' }} />
+      <div style={{ height: '1px', background: 'var(--surface-1)' }} />
       <Toggle
         label="Show session timer"
         desc="Display listening time on the home tab"
@@ -76,18 +76,18 @@ export default function SettingsTab(props: Props) {
         <div style={labelStyle}>Software <Divider /></div>
         <div
           style={{
-            background: '#111113',
-            border: '1px solid #1a1a1e',
+            background: 'var(--surface-1)',
+            border: '1px solid var(--border)',
             'border-radius': '12px',
             padding: '14px 16px',
           }}
         >
           <div style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-between' }}>
             <div>
-              <div style={{ 'font-size': '13px', color: '#ccc', 'font-weight': '500' }}>
+              <div style={{ 'font-size': '13px', color: 'var(--text-2)', 'font-weight': '500' }}>
                 baseus-desktop
               </div>
-              <div style={{ 'font-size': '10px', color: '#444', 'margin-top': '2px' }}>
+              <div style={{ 'font-size': '10px', color: 'var(--text-muted)', 'margin-top': '2px' }}>
                 {appVersion() ? `v${appVersion()}` : '…'}
               </div>
             </div>
@@ -98,11 +98,11 @@ export default function SettingsTab(props: Props) {
                 disabled={busy()}
                 style={{
                   background: 'transparent',
-                  border: '1px solid #2a2a2e',
+                  border: '1px solid var(--surface-3)',
                   'border-radius': '8px',
                   padding: '5px 10px',
                   'font-size': '11px',
-                  color: busy() ? '#444' : '#888',
+                  color: busy() ? 'var(--text-muted)' : 'var(--text-3)',
                   cursor: busy() ? 'default' : 'pointer',
                 }}
               >
@@ -127,10 +127,10 @@ export default function SettingsTab(props: Props) {
               }}
             >
               <div>
-                <div style={{ 'font-size': '12px', color: '#4ade80', 'font-weight': '600' }}>
+                <div style={{ 'font-size': '12px', color: 'var(--ok)', 'font-weight': '600' }}>
                   Update available
                 </div>
-                <div style={{ 'font-size': '10px', color: '#444', 'margin-top': '2px' }}>
+                <div style={{ 'font-size': '10px', color: 'var(--text-muted)', 'margin-top': '2px' }}>
                   v{availableVersion()}
                 </div>
               </div>
@@ -144,7 +144,7 @@ export default function SettingsTab(props: Props) {
                   padding: '5px 12px',
                   'font-size': '11px',
                   'font-weight': '600',
-                  color: updateState() === 'installing' ? '#444' : '#4ade80',
+                  color: updateState() === 'installing' ? 'var(--text-muted)' : 'var(--ok)',
                   cursor: updateState() === 'installing' ? 'default' : 'pointer',
                   'white-space': 'nowrap',
                 }}
@@ -163,15 +163,15 @@ function Toggle(p: { label: string; desc: string; value: boolean; onChange: (v: 
   return (
     <div style={{ display: 'flex', 'align-items': 'center', padding: '14px 0' }}>
       <div style={{ flex: '1' }}>
-        <div style={{ 'font-size': '13px', color: '#ccc', 'font-weight': '500' }}>{p.label}</div>
-        <div style={{ 'font-size': '10px', color: '#444', 'margin-top': '2px' }}>{p.desc}</div>
+        <div style={{ 'font-size': '13px', color: 'var(--text-2)', 'font-weight': '500' }}>{p.label}</div>
+        <div style={{ 'font-size': '10px', color: 'var(--text-muted)', 'margin-top': '2px' }}>{p.desc}</div>
       </div>
       <div
         onClick={() => p.onChange(!p.value)}
         style={{
           width: '36px', height: '20px',
           'border-radius': '99px',
-          background: p.value ? '#22c55e' : '#222',
+          background: p.value ? 'var(--ok)' : '#222',
           position: 'relative',
           cursor: 'pointer',
           transition: 'background 0.2s',
@@ -183,7 +183,7 @@ function Toggle(p: { label: string; desc: string; value: boolean; onChange: (v: 
             position: 'absolute',
             width: '16px', height: '16px',
             'border-radius': '50%',
-            background: '#fff',
+            background: 'var(--text)',
             top: '2px',
             left: p.value ? 'auto' : '2px',
             right: p.value ? '2px' : 'auto',
@@ -197,13 +197,13 @@ function Toggle(p: { label: string; desc: string; value: boolean; onChange: (v: 
 }
 
 function Divider() {
-  return <div style={{ flex: '1', height: '1px', background: '#161618' }} />;
+  return <div style={{ flex: '1', height: '1px', background: 'var(--border)' }} />;
 }
 
 const labelStyle = {
   'font-size': '9px',
   'font-weight': '700',
-  color: '#333',
+  color: 'var(--text-muted)',
   'letter-spacing': '0.12em',
   'text-transform': 'uppercase' as const,
   display: 'flex',

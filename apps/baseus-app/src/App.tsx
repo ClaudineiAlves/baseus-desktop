@@ -119,7 +119,7 @@ export default function App() {
   }
 
   const statusColor = () =>
-    status() === 'connected' ? '#22c55e' : status() === 'connecting' ? '#eab308' : '#525252';
+    status() === 'connected' ? 'var(--ok)' : status() === 'connecting' ? 'var(--warn)' : 'var(--text-muted)';
 
   const statusText = () =>
     status() === 'connected' ? 'Connected' : status() === 'connecting' ? 'Connecting…' : 'Disconnected';
@@ -127,10 +127,10 @@ export default function App() {
   return (
     <div
       style={{
-        width: '480px',
-        'min-height': '620px',
-        background: '#0d0d0f',
-        color: '#fff',
+        width: '100%',
+        height: '100vh',
+        background: 'var(--bg)',
+        color: 'var(--text)',
         'font-family': "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
         'box-sizing': 'border-box',
         display: 'flex',
@@ -145,23 +145,17 @@ export default function App() {
           'align-items': 'center',
           gap: '6px',
           padding: '12px 16px 10px',
-          'border-bottom': '1px solid #161618',
+          'border-bottom': '1px solid var(--border)',
           'flex-shrink': '0',
         }}
       >
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {(['#ff5f57', '#ffbd2e', '#28c840'] as const).map((c) => (
-            <div style={{ width: '11px', height: '11px', 'border-radius': '50%', background: c }} />
-          ))}
-        </div>
         <div
           style={{
             flex: '1',
             'text-align': 'center',
             'font-size': '12px',
             'font-weight': '600',
-            color: '#444',
-            'margin-left': '-40px',
+            color: 'var(--text-2)',
           }}
         >
           {connectedModelName()}
@@ -177,6 +171,7 @@ export default function App() {
         <Sidebar active={activeTab()} onSwitch={setActiveTab} updateAvailable={updateVersion() !== null} />
 
         <div style={{ flex: '1', padding: '16px', 'overflow-y': 'auto' }}>
+          <div style={{ 'max-width': '720px', margin: '0 auto', width: '100%' }}>
           <Show when={activeTab() === 'home'}>
             <div class="panel-in">
               <HomeTab
@@ -225,6 +220,7 @@ export default function App() {
               <SettingsTab initialUpdateVersion={updateVersion()} onUpdateInstalled={() => setUpdateVersion(null)} />
             </div>
           </Show>
+          </div>
         </div>
       </div>
     </div>

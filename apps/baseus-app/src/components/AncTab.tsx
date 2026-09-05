@@ -63,8 +63,8 @@ export default function AncTab(props: Props) {
               classList={{ on: isActive() }}
               onClick={() => props.onMode(mode)}
               style={{
-                background: isActive() ? 'rgba(99,102,241,0.08)' : '#111113',
-                border: `1px solid ${isActive() ? 'rgba(99,102,241,0.4)' : '#1a1a1e'}`,
+                background: isActive() ? 'rgba(99,102,241,0.08)' : 'var(--surface-1)',
+                border: `1px solid ${isActive() ? 'rgba(99,102,241,0.4)' : 'var(--border)'}`,
                 'border-radius': '12px',
                 padding: '14px 16px',
                 display: 'flex',
@@ -79,19 +79,19 @@ export default function AncTab(props: Props) {
             >
               <span style={{ 'font-size': '20px', width: '28px', 'text-align': 'center' }}>{meta.icon}</span>
               <div style={{ flex: '1' }}>
-                <div style={{ 'font-size': '13px', 'font-weight': '600', color: isActive() ? '#c7d2fe' : '#aaa', transition: 'color 0.16s' }}>
+                <div style={{ 'font-size': '13px', 'font-weight': '600', color: isActive() ? 'var(--accent-soft)' : 'var(--text-2)', transition: 'color 0.16s' }}>
                   {meta.name}
                 </div>
-                <div style={{ 'font-size': '10px', color: '#444', 'margin-top': '2px' }}>{meta.desc}</div>
+                <div style={{ 'font-size': '10px', color: 'var(--text-muted)', 'margin-top': '2px' }}>{meta.desc}</div>
               </div>
               <div
                 class="anc-check"
                 classList={{ on: isActive() }}
                 style={{
                   width: '16px', height: '16px', 'border-radius': '50%',
-                  background: '#6366f1', display: 'flex',
+                  background: 'var(--accent)', display: 'flex',
                   'align-items': 'center', 'justify-content': 'center',
-                  'font-size': '9px', color: '#fff', 'flex-shrink': '0',
+                  'font-size': '9px', color: 'var(--text)', 'flex-shrink': '0',
                 }}
               >
                 ✓
@@ -106,15 +106,15 @@ export default function AncTab(props: Props) {
         <div style={labelStyle}>Strength <Divider /></div>
         <div
           style={{
-            background: '#111113',
-            border: '1px solid #1a1a1e',
+            background: 'var(--surface-1)',
+            border: '1px solid var(--border)',
             'border-radius': '12px',
             padding: '14px 16px',
           }}
         >
           <div style={{ display: 'flex', 'justify-content': 'space-between', 'margin-bottom': '12px' }}>
-            <span style={{ 'font-size': '12px', color: '#888' }}>Level</span>
-            <span class="num-mono" style={{ 'font-size': '12px', 'font-weight': '700', color: '#818cf8' }}>
+            <span style={{ 'font-size': '12px', color: 'var(--text-3)' }}>Level</span>
+            <span class="num-mono" style={{ 'font-size': '12px', 'font-weight': '700', color: 'var(--accent-soft)' }}>
               {props.level} / 10
             </span>
           </div>
@@ -124,11 +124,11 @@ export default function AncTab(props: Props) {
             onChange={sliderCommit}
             style={{
               width: '100%', height: '4px',
-              'accent-color': '#6366f1',
+              'accent-color': 'var(--accent)',
               cursor: 'pointer',
             }}
           />
-          <div style={{ display: 'flex', 'justify-content': 'space-between', 'margin-top': '6px', 'font-size': '9px', color: '#333' }}>
+          <div style={{ display: 'flex', 'justify-content': 'space-between', 'margin-top': '6px', 'font-size': '9px', color: 'var(--text-muted)' }}>
             <span>Low</span><span>High</span>
           </div>
         </div>
@@ -158,13 +158,13 @@ export default function AncTab(props: Props) {
 }
 
 function Divider() {
-  return <div style={{ flex: '1', height: '1px', background: '#161618' }} />;
+  return <div style={{ flex: '1', height: '1px', background: 'var(--border)' }} />;
 }
 
 const labelStyle = {
   'font-size': '9px',
   'font-weight': '700',
-  color: '#333',
+  color: 'var(--text-muted)',
   'letter-spacing': '0.12em',
   'text-transform': 'uppercase' as const,
   display: 'flex',

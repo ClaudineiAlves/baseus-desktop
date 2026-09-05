@@ -23,15 +23,15 @@ export default function EqTab(props: Props) {
             <div
               onClick={() => props.onPreset(id)}
               style={{
-                background: active() ? 'rgba(99,102,241,0.12)' : '#111113',
-                border: active() ? '1px solid rgba(99,102,241,0.5)' : '1px solid #1a1a1e',
+                background: active() ? 'rgba(99,102,241,0.12)' : 'var(--surface-1)',
+                border: active() ? '1px solid rgba(99,102,241,0.5)' : '1px solid var(--border)',
                 'border-radius': '12px',
                 padding: '12px',
                 cursor: 'pointer',
                 transition: 'background 0.15s, border-color 0.15s',
               }}
             >
-              <div style={{ 'font-size': '12px', 'font-weight': '600', color: active() ? '#a5b4fc' : '#888', 'margin-bottom': '8px' }}>
+              <div style={{ 'font-size': '12px', 'font-weight': '600', color: active() ? 'var(--accent-soft)' : 'var(--text-3)', 'margin-bottom': '8px' }}>
                 {name}
               </div>
               <div style={{ display: 'flex', 'align-items': 'flex-end', gap: '3px', height: '28px' }}>
@@ -40,7 +40,7 @@ export default function EqTab(props: Props) {
                     style={{
                       flex: '1',
                       height: `${h}%`,
-                      background: active() ? '#818cf8' : '#333',
+                      background: active() ? 'var(--accent-soft)' : 'var(--text-muted)',
                       'border-radius': '2px',
                       transition: 'background 0.15s',
                     }}
@@ -56,13 +56,13 @@ export default function EqTab(props: Props) {
 }
 
 function Divider() {
-  return <div style={{ flex: '1', height: '1px', background: '#161618' }} />;
+  return <div style={{ flex: '1', height: '1px', background: 'var(--border)' }} />;
 }
 
 const labelStyle = {
   'font-size': '9px',
   'font-weight': '700',
-  color: '#333',
+  color: 'var(--text-muted)',
   'letter-spacing': '0.12em',
   'text-transform': 'uppercase' as const,
   display: 'flex',

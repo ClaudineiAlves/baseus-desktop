@@ -39,7 +39,7 @@ export default function Sidebar(props: Props) {
     'border-radius': '9px',
     border: 'none',
     background: props.active === tab ? 'rgba(99,102,241,0.18)' : 'transparent',
-    color: props.active === tab ? '#a5b4fc' : '#444',
+    color: props.active === tab ? 'var(--accent-soft)' : 'var(--text-muted)',
     'font-size': '18px',
     cursor: 'pointer',
     display: 'flex',
@@ -54,8 +54,8 @@ export default function Sidebar(props: Props) {
       style={{
         position: 'relative',
         width: '52px',
-        background: '#0a0a0c',
-        'border-right': '1px solid #161618',
+        background: 'var(--bg)',
+        'border-right': '1px solid var(--border)',
         display: 'flex',
         'flex-direction': 'column',
         'align-items': 'center',
@@ -74,7 +74,7 @@ export default function Sidebar(props: Props) {
           top: '0',
           width: '3px',
           height: '18px',
-          background: '#6366f1',
+          background: 'var(--accent)',
           'border-radius': '0 3px 3px 0',
         }}
       />
@@ -110,8 +110,8 @@ export default function Sidebar(props: Props) {
               width: '7px',
               height: '7px',
               'border-radius': '50%',
-              background: '#22c55e',
-              border: '1.5px solid #0a0a0c',
+              background: 'var(--ok)',
+              border: '1.5px solid var(--bg)',
             }}
           />
         )}
