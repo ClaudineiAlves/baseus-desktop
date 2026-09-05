@@ -44,9 +44,7 @@ The full frames are embedded verbatim in
 `BA 8C <side> FF`. All wire values below are confirmed live from the vendor app
 (they do NOT match the SDK KeyType/KeyFunction enums).
 
-Keys (gesture type), confirmed live: `00` Triple Tap, `01` Long Press,
-`02` Tap & Hold, `03` One Tap. (No separate double tap on this model. One Tap
-only accepts None / Play-Pause.)
+Keys (gesture type), confirmed live: `00` Double Tap, `01` Triple Tap, `02` Tap & Hold, `03` One Tap (restricted to None / Play-Pause).
 
 Functions (the app's own table, all confirmed live): `00` None, `01` Play/Pause,
 `02` Previous, `03` Next, `04` Assistant, `06` ANC Mode, `0b` Volume Up,

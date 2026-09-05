@@ -248,22 +248,23 @@ impl GestureSide {
 }
 
 /// The tap/press a gesture responds to. Wire byte in `BA 8D <side> <key> <func>`,
-/// all four confirmed live. The BP1 Pro exposes these four (no separate double tap);
+/// confirmed live by applying the same function to each in the app's list order.
 /// One Tap only accepts None / Play-Pause.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GestureKey {
-    TripleTap = 0x00,
-    LongPress = 0x01,
+    DoubleTap = 0x00,
+    TripleTap = 0x01,
     TapHold = 0x02,
     OneTap = 0x03,
 }
 
 impl GestureKey {
+    /// In the vendor app's list order.
     pub const ALL: [GestureKey; 4] = [
         Self::OneTap,
+        Self::DoubleTap,
         Self::TripleTap,
-        Self::LongPress,
         Self::TapHold,
     ];
     pub fn to_byte(self) -> u8 {
@@ -271,8 +272,8 @@ impl GestureKey {
     }
     pub fn from_byte(b: u8) -> Option<Self> {
         match b {
-            0x00 => Some(Self::TripleTap),
-            0x01 => Some(Self::LongPress),
+            0x00 => Some(Self::DoubleTap),
+            0x01 => Some(Self::TripleTap),
             0x02 => Some(Self::TapHold),
             0x03 => Some(Self::OneTap),
             _ => None,
@@ -281,8 +282,8 @@ impl GestureKey {
     pub fn label(self) -> &'static str {
         match self {
             Self::OneTap => "One Tap",
+            Self::DoubleTap => "Double Tap",
             Self::TripleTap => "Triple Tap",
-            Self::LongPress => "Long Press",
             Self::TapHold => "Tap & Hold",
         }
     }
