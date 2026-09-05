@@ -33,11 +33,11 @@ fn command_bytes(arg: &str) -> Option<Vec<u8>> {
         "eq:classic" => baseus_protocol::types::EqMode::BaseusClassic
             .frame()
             .to_vec(),
-        // Gesture BA 8D <side> <key> <func>. Keys: OneTap=03 Triple=00 LongPress=01 TapHold=02.
+        // Gesture BA 8D <side> <key> <func>. Keys: Double=00 Triple=01 TapHold=02 OneTap=03.
+        "gest:double-next" => vec![0xBA, 0x8D, 0x00, 0x00, 0x03],
+        "gest:triple-volup" => vec![0xBA, 0x8D, 0x00, 0x01, 0x0B],
+        "gest:hold-anc" => vec![0xBA, 0x8D, 0x00, 0x02, 0x06],
         "gest:onetap-play" => vec![0xBA, 0x8D, 0x00, 0x03, 0x01],
-        "gest:triple-next" => vec![0xBA, 0x8D, 0x00, 0x00, 0x03],
-        "gest:long-voldown" => vec![0xBA, 0x8D, 0x00, 0x01, 0x0C],
-        "gest:hold-assistant" => vec![0xBA, 0x8D, 0x00, 0x02, 0x04],
         _ => return None,
     })
 }

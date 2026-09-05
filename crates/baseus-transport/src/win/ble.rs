@@ -37,8 +37,15 @@ impl GattTransport {
         tracing::info!("checking cached peripherals for any known Baseus device…");
         if let Ok(Some((p, idx))) = find_match(&adapter, devices).await {
             tracing::info!("found {} in adapter cache", devices[idx].name);
-            let transport = connect_with_uuids(p, devices[idx]).await?;
-            return Ok((transport, idx));
+            // A cached entry can be stale (from a previous session) or momentarily busy
+            // and fail to connect. Don't give up here — fall through to a fresh scan so
+            // the retry loop isn't stuck hitting the same dead cache entry every time.
+            match connect_with_uuids(p, devices[idx]).await {
+                Ok(transport) => return Ok((transport, idx)),
+                Err(e) => tracing::warn!(
+                    "cached peripheral failed to connect ({e}); falling back to a scan"
+                ),
+            }
         }
 
         // Scan unfiltered. A ScanFilter with service UUIDs becomes a BlueZ discovery
