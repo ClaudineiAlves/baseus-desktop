@@ -226,6 +226,119 @@ pub struct WearState {
     pub right_in_ear: bool,
 }
 
+/// Which earbud a gesture belongs to. Wire byte in `BA 8D <side> …`.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GestureSide {
+    Left = 0,
+    Right = 1,
+}
+
+impl GestureSide {
+    pub fn to_byte(self) -> u8 {
+        self as u8
+    }
+    pub fn from_byte(b: u8) -> Option<Self> {
+        match b {
+            0 => Some(Self::Left),
+            1 => Some(Self::Right),
+            _ => None,
+        }
+    }
+}
+
+/// The tap/press a gesture responds to. The wire byte is the SDK `KeyType` LEFT_* value;
+/// `DoubleTap` (0x03) is confirmed live from the vendor app, the others match the APK
+/// `KeyType` enum (SINGLE=1, DOUBLE=3, TRIPLE=5, LONG_PRESS=7) with `side` selecting the bud.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GestureKey {
+    SingleTap = 1,
+    DoubleTap = 3,
+    TripleTap = 5,
+    LongPress = 7,
+}
+
+impl GestureKey {
+    pub const ALL: [GestureKey; 4] = [
+        Self::SingleTap,
+        Self::DoubleTap,
+        Self::TripleTap,
+        Self::LongPress,
+    ];
+    pub fn to_byte(self) -> u8 {
+        self as u8
+    }
+    pub fn from_byte(b: u8) -> Option<Self> {
+        match b {
+            1 => Some(Self::SingleTap),
+            3 => Some(Self::DoubleTap),
+            5 => Some(Self::TripleTap),
+            7 => Some(Self::LongPress),
+            _ => None,
+        }
+    }
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::SingleTap => "Single Tap",
+            Self::DoubleTap => "Double Tap",
+            Self::TripleTap => "Triple Tap",
+            Self::LongPress => "Long Press",
+        }
+    }
+}
+
+/// What a gesture does. Values are the SDK `KeyFunction` enum, extracted from the APK.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GestureFunction {
+    None = 0,
+    Recall = 1,
+    Assistant = 2,
+    Previous = 3,
+    Next = 4,
+    VolumeUp = 5,
+    VolumeDown = 6,
+    PlayPause = 7,
+    GameMode = 8,
+    AncMode = 9,
+}
+
+impl GestureFunction {
+    pub const ALL: [GestureFunction; 10] = [
+        Self::None,
+        Self::Recall,
+        Self::Assistant,
+        Self::Previous,
+        Self::Next,
+        Self::VolumeUp,
+        Self::VolumeDown,
+        Self::PlayPause,
+        Self::GameMode,
+        Self::AncMode,
+    ];
+    pub fn to_byte(self) -> u8 {
+        self as u8
+    }
+    pub fn from_byte(b: u8) -> Option<Self> {
+        Self::ALL.into_iter().find(|f| f.to_byte() == b)
+    }
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::None => "None",
+            Self::Recall => "Voice Recall",
+            Self::Assistant => "Assistant",
+            Self::Previous => "Previous",
+            Self::Next => "Next",
+            Self::VolumeUp => "Volume Up",
+            Self::VolumeDown => "Volume Down",
+            Self::PlayPause => "Play / Pause",
+            Self::GameMode => "Game Mode",
+            Self::AncMode => "ANC Mode",
+        }
+    }
+}
+
 /// Events emitted from the device to the app (via Tauri `device-event`).
 /// Serialised as `{ "type": "<variant>", "data": <payload> }` for TypeScript.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

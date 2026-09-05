@@ -33,6 +33,15 @@ fn command_bytes(arg: &str) -> Option<Vec<u8>> {
         "eq:classic" => baseus_protocol::types::EqMode::BaseusClassic
             .frame()
             .to_vec(),
+        // Gesture probes: BA 8D <side> <key> <function>. side 00=left, function 07=play/pause.
+        "gest:k01" => vec![0xBA, 0x8D, 0x00, 0x01, 0x07],
+        "gest:k02" => vec![0xBA, 0x8D, 0x00, 0x02, 0x07],
+        "gest:k03" => vec![0xBA, 0x8D, 0x00, 0x03, 0x07],
+        "gest:k04" => vec![0xBA, 0x8D, 0x00, 0x04, 0x07],
+        "gest:k05" => vec![0xBA, 0x8D, 0x00, 0x05, 0x07],
+        "gest:k06" => vec![0xBA, 0x8D, 0x00, 0x06, 0x07],
+        "gest:k07" => vec![0xBA, 0x8D, 0x00, 0x07, 0x07],
+        "gest:query" => vec![0xBA, 0x8C, 0x00, 0xFF],
         _ => return None,
     })
 }

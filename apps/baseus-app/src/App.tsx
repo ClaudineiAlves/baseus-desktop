@@ -3,6 +3,7 @@ import Sidebar, { type Tab } from './components/Sidebar';
 import HomeTab from './components/HomeTab';
 import AncTab from './components/AncTab';
 import SoundTab from './components/SoundTab';
+import GestureTab from './components/GestureTab';
 import SettingsTab from './components/SettingsTab';
 import { initColorScheme } from './lib/scheme';
 import type { SpatialMode, DynamicMode } from './lib/tauri';
@@ -252,6 +253,12 @@ export default function App() {
                 onDynamic={handleDynamic}
                 onEq={handleEqMode}
               />
+            </div>
+          </Show>
+
+          <Show when={activeTab() === 'gesture'}>
+            <div class="panel-in">
+              <GestureTab />
             </div>
           </Show>
 

@@ -106,6 +106,17 @@ export function getEqModes(): Promise<Array<[number, string]>> {
   return invoke('get_eq_modes');
 }
 
+export function setGesture(side: number, key: number, func: number): Promise<void> {
+  return invoke('set_gesture', { side, key, function: func });
+}
+
+// Returns [keys, functions], each a list of [byte, label].
+export function getGestureOptions(): Promise<
+  [Array<[number, string]>, Array<[number, string]>]
+> {
+  return invoke('get_gesture_options');
+}
+
 export function getSupportedAncModes(modelName: string): Promise<AncMode[]> {
   return invoke('get_supported_anc_modes', { modelName });
 }

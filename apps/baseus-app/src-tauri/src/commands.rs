@@ -1,6 +1,9 @@
 use crate::device::{CommandSender, DeviceCommand, Side};
 use crate::settings::{self, Settings};
-use baseus_protocol::types::{AncMode, BaseusModel, DynamicMode, EqMode, EqPreset, SpatialMode};
+use baseus_protocol::types::{
+    AncMode, BaseusModel, DynamicMode, EqMode, EqPreset, GestureFunction, GestureKey, GestureSide,
+    SpatialMode,
+};
 use tauri::{AppHandle, Runtime, State};
 use tauri_plugin_autostart::ManagerExt;
 #[cfg(not(target_os = "linux"))]
@@ -63,6 +66,39 @@ pub fn get_eq_modes() -> Vec<(u8, String)> {
         .iter()
         .map(|m| (m.id(), m.label().to_string()))
         .collect()
+}
+
+#[tauri::command]
+pub fn set_gesture(
+    side: u8,
+    key: u8,
+    function: u8,
+    cmd_tx: State<CommandSender>,
+) -> Result<(), String> {
+    let side = GestureSide::from_byte(side).ok_or_else(|| format!("bad gesture side: {side}"))?;
+    let key = GestureKey::from_byte(key).ok_or_else(|| format!("bad gesture key: {key}"))?;
+    let func = GestureFunction::from_byte(function)
+        .ok_or_else(|| format!("bad gesture function: {function}"))?;
+    cmd_tx
+        .send(DeviceCommand::SetGesture(side, key, func))
+        .map_err(|e| e.to_string())
+}
+
+/// A (wire byte, label) pair for a frontend picker.
+type LabeledByte = (u8, String);
+
+/// Gesture keys (tap types) and functions for the frontend to render.
+#[tauri::command]
+pub fn get_gesture_options() -> (Vec<LabeledByte>, Vec<LabeledByte>) {
+    let keys = GestureKey::ALL
+        .iter()
+        .map(|k| (k.to_byte(), k.label().to_string()))
+        .collect();
+    let funcs = GestureFunction::ALL
+        .iter()
+        .map(|f| (f.to_byte(), f.label().to_string()))
+        .collect();
+    (keys, funcs)
 }
 
 #[tauri::command]

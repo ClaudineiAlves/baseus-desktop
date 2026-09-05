@@ -75,6 +75,8 @@ pub fn run() {
             commands::set_dynamic_mode,
             commands::set_eq_mode,
             commands::get_eq_modes,
+            commands::set_gesture,
+            commands::get_gesture_options,
             commands::set_game_mode,
             commands::find_earbud,
             commands::get_settings,

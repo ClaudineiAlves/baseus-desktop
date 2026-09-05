@@ -3,7 +3,10 @@ use std::time::Duration;
 use baseus_protocol::{
     framing::Frame,
     models::bp1_pro_anc::Bp1ProAnc,
-    types::{AncMode, BaseusModel, DeviceEvent, DynamicMode, EqMode, EqPreset, SpatialMode},
+    types::{
+        AncMode, BaseusModel, DeviceEvent, DynamicMode, EqMode, EqPreset, GestureFunction,
+        GestureKey, GestureSide, SpatialMode,
+    },
 };
 use baseus_transport::{win::ble::GattTransport, DeviceMatch};
 use serde::Serialize;
@@ -27,6 +30,7 @@ pub enum DeviceCommand {
     SetSpatialMode(SpatialMode),
     SetDynamicMode(DynamicMode),
     SetEqMode(EqMode),
+    SetGesture(GestureSide, GestureKey, GestureFunction),
     SetGameMode(bool),
     FindEarbud(Side),
 }
@@ -205,6 +209,8 @@ async fn notification_loop(
                             DeviceCommand::SetEqMode(m) => {
                                 let _ = app.emit("device-event", &DeviceEvent::EqModeUpdate(*m));
                             }
+                            // Gesture config has no state event to echo.
+                            DeviceCommand::SetGesture(..) => {}
                             DeviceCommand::FindEarbud(side) => {
                                 let tx = find_stop_tx.clone();
                                 let side = side.clone();
@@ -264,6 +270,10 @@ async fn execute_command(
         }
         // EQ mode (0x31) — replay the captured 51-byte preset frame verbatim.
         (DeviceCommand::SetEqMode(mode), BaseusModel::Bp1ProAnc) => mode.frame().to_vec(),
+        // Gesture remap (0x8d): BA 8D <side> <key> <function>.
+        (DeviceCommand::SetGesture(side, key, func), BaseusModel::Bp1ProAnc) => {
+            vec![0xBA, 0x8D, side.to_byte(), key.to_byte(), func.to_byte()]
+        }
         // Game/low-latency mode — verified for BP1 over both SPP and BLE (issue #3).
         (DeviceCommand::SetGameMode(on), BaseusModel::Bp1ProAnc) => {
             vec![0xBA, 0x24, u8::from(*on)]
