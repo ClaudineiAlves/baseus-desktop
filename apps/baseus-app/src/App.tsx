@@ -4,6 +4,7 @@ import HomeTab from './components/HomeTab';
 import AncTab from './components/AncTab';
 import EqTab from './components/EqTab';
 import SettingsTab from './components/SettingsTab';
+import { initColorScheme } from './lib/scheme';
 import {
   onDeviceEvent,
   onConnectionState,
@@ -47,6 +48,18 @@ export default function App() {
     const unlisteners: Array<() => void> = [];
     onCleanup(() => unlisteners.forEach((fn) => fn()));
 
+    // Before anything paints, so the window never flashes the built-in palette.
+    await initColorScheme();
+
+    // Scale the fixed-px design to the window. The floor of 1 keeps it honest on a
+    // small window; the ceiling stops a maximised window from looking like a mockup.
+    const rescale = () => {
+      const scale = Math.min(Math.max(window.innerWidth / 640, 1), 1.7);
+      document.documentElement.style.setProperty('--ui-scale', String(scale));
+    };
+    rescale();
+    window.addEventListener('resize', rescale);
+    unlisteners.push(() => window.removeEventListener('resize', rescale));
     await loadSettings();
 
     onDeviceEvent((e) => {
@@ -170,8 +183,8 @@ export default function App() {
       <div style={{ display: 'flex', flex: '1' }}>
         <Sidebar active={activeTab()} onSwitch={setActiveTab} updateAvailable={updateVersion() !== null} />
 
-        <div style={{ flex: '1', padding: '16px', 'overflow-y': 'auto' }}>
-          <div style={{ 'max-width': '720px', margin: '0 auto', width: '100%' }}>
+        <div style={{ flex: '1', padding: '16px', 'overflow-y': 'auto', display: 'flex', 'flex-direction': 'column' }}>
+          <div style={{ 'max-width': '560px', margin: 'auto', width: '100%' }}>
           <Show when={activeTab() === 'home'}>
             <div class="panel-in">
               <HomeTab

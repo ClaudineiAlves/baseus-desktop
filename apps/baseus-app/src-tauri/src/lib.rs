@@ -1,5 +1,6 @@
 mod commands;
 mod device;
+mod scheme;
 mod settings;
 mod tray;
 
@@ -46,6 +47,7 @@ pub fn run() {
         .manage(cmd_tx)
         .setup(|app| {
             tray::setup_tray(app.handle())?;
+            scheme::watch(app.handle().clone());
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.hide();
             }
@@ -76,6 +78,7 @@ pub fn run() {
             commands::get_supported_anc_modes,
             commands::check_for_update,
             commands::install_update,
+            scheme::get_color_scheme,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

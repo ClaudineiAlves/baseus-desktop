@@ -37,6 +37,12 @@ html, body, #root {
   --mono-num: ui-monospace, "SF Mono", "Cascadia Code", "Segoe UI Mono", Menlo, monospace;
 }
 
+/* The interface is drawn in fixed px for a ~480px panel. `zoom` scales the whole
+   design — type, padding, controls, borders — as one, keeping the proportions the
+   design was built with instead of stretching a few boxes. It reflows (unlike
+   transform: scale), so nothing blurs. App.tsx sets --ui-scale from the viewport. */
+#root { zoom: var(--ui-scale, 1); }
+
 .num-mono { font-family: var(--mono-num); font-variant-numeric: tabular-nums; }
 
 @keyframes pulse      { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
