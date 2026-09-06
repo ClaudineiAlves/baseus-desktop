@@ -1,6 +1,9 @@
 use crate::{
     models::DecodeError,
-    types::{AncMode, BatteryState, CaseState, DeviceEvent, EqPreset},
+    types::{
+        AncMode, BatteryState, CaseState, DeviceEvent, DynamicMode, EqMode, GestureConfig,
+        SpatialMode,
+    },
     Frame,
 };
 
@@ -26,14 +29,55 @@ impl Bp1ProAnc {
                 *frame.payload.first().unwrap_or(&0) != 0,
             )),
             0x27 => Self::decode_case(&frame.payload),
-            // 0x30 appears as a periodic keepalive in BLE — NOT an ANC state update.
-            // ANC acks arrive as AA 34 [type] and are handled in device.rs.
-            // 0x32/0x33 kept for safety in case the device ever sends them directly.
-            0x32 => Ok(DeviceEvent::AncModeUpdate(AncMode::Transparency)),
-            0x33 => Ok(DeviceEvent::AncModeUpdate(AncMode::Anc)),
-            // EQ preset ack: AA 43 [preset_byte] or AA 42 [preset_byte] (query response).
-            // Confirmed via btsnoop RFCOMM captures — same opcode echoed back by device.
-            0x42 | 0x43 => Self::decode_eq_preset(&frame.payload),
+            // EQ mode state (query response). Live capture: AA 30 <preset_id>. The old
+            // RE read 0x30 as an ANC keepalive; on this firmware it carries the EQ preset.
+            0x30 => {
+                let id = *frame.payload.first().unwrap_or(&0);
+                EqMode::from_id(id)
+                    .map(DeviceEvent::EqModeUpdate)
+                    .ok_or(DecodeError::UnknownOpcode(0x30))
+            }
+            // ANC state (query response): AA 33 <mode> <level>. mode 0=off, 1=anc,
+            // 2=transparency; level is the strength byte. The old RE hardcoded Anc and
+            // dropped the level, so the UI never reflected the saved strength.
+            0x32 | 0x33 => {
+                let mode = match frame.payload.first().copied().unwrap_or(1) {
+                    0 => AncMode::Off,
+                    2 => AncMode::Transparency,
+                    _ => AncMode::Anc,
+                };
+                let level = frame.payload.get(1).copied().unwrap_or(0);
+                Ok(DeviceEvent::AncStateUpdate { mode, level })
+            }
+            // Gesture map for one earbud (AA 8C query response):
+            // 8C <side> [<key> <func>]... — four key/func pairs.
+            0x8C => {
+                let side = *frame.payload.first().unwrap_or(&0);
+                let assignments = frame.payload[1..]
+                    .chunks(2)
+                    .filter(|c| c.len() == 2)
+                    .map(|c| (c[0], c[1]))
+                    .collect();
+                Ok(DeviceEvent::GestureConfigUpdate(GestureConfig {
+                    side,
+                    assignments,
+                }))
+            }
+            // Spatial Audio state (query response): AA 42 <mode>. Set is 0x43; the old RE
+            // mislabelled this pair as "EQ preset".
+            0x42 => {
+                let m = *frame.payload.first().unwrap_or(&0);
+                SpatialMode::from_byte(m)
+                    .map(DeviceEvent::SpatialModeUpdate)
+                    .ok_or(DecodeError::UnknownOpcode(0x42))
+            }
+            // Dynamic Sound state (query response): AA 91 <mode> [03].
+            0x91 => {
+                let m = *frame.payload.first().unwrap_or(&0);
+                DynamicMode::from_byte(m)
+                    .map(DeviceEvent::DynamicModeUpdate)
+                    .ok_or(DecodeError::UnknownOpcode(0x91))
+            }
             other => Err(DecodeError::UnknownOpcode(other)),
         }
     }
@@ -50,12 +94,6 @@ impl Bp1ProAnc {
         } else {
             last_commanded.unwrap_or(AncMode::Anc)
         }
-    }
-
-    fn decode_eq_preset(payload: &[u8]) -> Result<DeviceEvent, DecodeError> {
-        let byte = *payload.first().unwrap_or(&0);
-        let preset = EqPreset::from_byte(byte).unwrap_or(EqPreset::Balanced);
-        Ok(DeviceEvent::EqPresetUpdate(preset))
     }
 
     fn decode_battery(payload: &[u8]) -> Result<DeviceEvent, DecodeError> {
@@ -121,30 +159,57 @@ mod tests {
     }
 
     #[test]
-    fn anc_off_keepalive_is_ignored() {
-        // AA 30 00 is a periodic BLE keepalive, not an ANC state notification.
-        // ANC off state arrives as AA 34 00 (handled in device.rs, not here).
-        assert!(matches!(
-            decode(&[0xAA, 0x30, 0x00]),
-            Err(DecodeError::UnknownOpcode(0x30))
-        ));
-    }
-
-    #[test]
-    fn anc_transparency_decodes_correctly() {
-        // Golden: AA 32 02 FF
+    fn eq_state_baseus_classic_from_0x30_00() {
+        // AA 30 00 was read as an ANC keepalive by the old RE; it is actually the EQ
+        // mode query response, preset id 0 = Baseus Classic.
+        use crate::types::EqMode;
         assert_eq!(
-            decode(&[0xAA, 0x32, 0x02, 0xFF]).unwrap(),
-            DeviceEvent::AncModeUpdate(AncMode::Transparency)
+            decode(&[0xAA, 0x30, 0x00]).unwrap(),
+            DeviceEvent::EqModeUpdate(EqMode::BaseusClassic)
         );
     }
 
     #[test]
-    fn anc_on_decodes_correctly() {
-        // Golden: AA 33 01 68
+    fn anc_transparency_decodes_correctly() {
+        // AA 32/33 with mode 2 = transparency.
+        assert_eq!(
+            decode(&[0xAA, 0x33, 0x02, 0xFF]).unwrap(),
+            DeviceEvent::AncStateUpdate {
+                mode: AncMode::Transparency,
+                level: 0xFF
+            }
+        );
+    }
+
+    #[test]
+    fn anc_state_decodes_mode_and_level() {
+        // AA 33 <mode> <level> — query response carries the strength level.
         assert_eq!(
             decode(&[0xAA, 0x33, 0x01, 0x68]).unwrap(),
-            DeviceEvent::AncModeUpdate(AncMode::Anc)
+            DeviceEvent::AncStateUpdate {
+                mode: AncMode::Anc,
+                level: 0x68
+            }
+        );
+        assert_eq!(
+            decode(&[0xAA, 0x33, 0x00, 0x00]).unwrap(),
+            DeviceEvent::AncStateUpdate {
+                mode: AncMode::Off,
+                level: 0x00
+            }
+        );
+    }
+
+    #[test]
+    fn gesture_config_decodes() {
+        use crate::types::GestureConfig;
+        // AA 8C <side> [<key> <func>]*4
+        assert_eq!(
+            decode(&[0xAA, 0x8C, 0x00, 0x00, 0x04, 0x03, 0x01]).unwrap(),
+            DeviceEvent::GestureConfigUpdate(GestureConfig {
+                side: 0,
+                assignments: vec![(0x00, 0x04), (0x03, 0x01)],
+            })
         );
     }
 
@@ -190,45 +255,41 @@ mod tests {
     }
 
     #[test]
-    fn eq_set_ack_balanced_decodes() {
-        // AA 43 00 — device ack after BA 43 00 (set Balanced)
-        let ev = decode(&[0xAA, 0x43, 0x00]).unwrap();
-        assert_eq!(ev, DeviceEvent::EqPresetUpdate(EqPreset::Balanced));
+    fn spatial_state_decodes() {
+        // AA 42 <mode> — query response for Spatial Audio.
+        use crate::types::SpatialMode;
+        assert_eq!(
+            decode(&[0xAA, 0x42, 0x00]).unwrap(),
+            DeviceEvent::SpatialModeUpdate(SpatialMode::Normal)
+        );
+        assert_eq!(
+            decode(&[0xAA, 0x42, 0x02]).unwrap(),
+            DeviceEvent::SpatialModeUpdate(SpatialMode::Cinema)
+        );
     }
 
     #[test]
-    fn eq_set_ack_bass_boost_decodes() {
-        // AA 43 01 — device ack after BA 43 01 (set BassBoost)
-        let ev = decode(&[0xAA, 0x43, 0x01]).unwrap();
-        assert_eq!(ev, DeviceEvent::EqPresetUpdate(EqPreset::BassBoost));
+    fn dynamic_state_decodes() {
+        // AA 91 <mode> [03] — query response for Dynamic Sound.
+        use crate::types::DynamicMode;
+        assert_eq!(
+            decode(&[0xAA, 0x91, 0x01, 0x03]).unwrap(),
+            DeviceEvent::DynamicModeUpdate(DynamicMode::BassBoost)
+        );
     }
 
     #[test]
-    fn eq_set_ack_voice_decodes() {
-        // AA 43 02 — device ack after BA 43 02 (set Voice)
-        let ev = decode(&[0xAA, 0x43, 0x02]).unwrap();
-        assert_eq!(ev, DeviceEvent::EqPresetUpdate(EqPreset::Voice));
-    }
-
-    #[test]
-    fn eq_set_ack_clear_decodes() {
-        // AA 43 03 — device ack after BA 43 03 (set Clear; value extrapolated)
-        let ev = decode(&[0xAA, 0x43, 0x03]).unwrap();
-        assert_eq!(ev, DeviceEvent::EqPresetUpdate(EqPreset::Clear));
-    }
-
-    #[test]
-    fn eq_query_response_decodes() {
-        // AA 42 01 — query response (opcode 0x42) returning current preset BassBoost
-        let ev = decode(&[0xAA, 0x42, 0x01]).unwrap();
-        assert_eq!(ev, DeviceEvent::EqPresetUpdate(EqPreset::BassBoost));
-    }
-
-    #[test]
-    fn eq_unknown_preset_falls_back_to_balanced() {
-        // AA 43 FF — unknown preset byte falls back to Balanced rather than erroring
-        let ev = decode(&[0xAA, 0x43, 0xFF]).unwrap();
-        assert_eq!(ev, DeviceEvent::EqPresetUpdate(EqPreset::Balanced));
+    fn eq_state_decodes() {
+        // AA 30 <preset_id> — query response for EQ mode.
+        use crate::types::EqMode;
+        assert_eq!(
+            decode(&[0xAA, 0x30, 0x07]).unwrap(),
+            DeviceEvent::EqModeUpdate(EqMode::Jazz)
+        );
+        assert_eq!(
+            decode(&[0xAA, 0x30, 0x00]).unwrap(),
+            DeviceEvent::EqModeUpdate(EqMode::BaseusClassic)
+        );
     }
 
     #[test]

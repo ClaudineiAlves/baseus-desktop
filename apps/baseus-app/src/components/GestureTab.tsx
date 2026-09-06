@@ -3,7 +3,14 @@ import { getGestureOptions, setGesture, type GestureOption } from '../lib/tauri'
 
 // Module-level so the picked assignments survive switching tabs (the tab remounts).
 // It reflects what we last sent, not a read-back from the earbud.
-const [chosen, setChosen] = createSignal<Record<string, number>>({});
+export const [chosen, setChosen] = createSignal<Record<string, number>>({});
+
+// Apply a full gesture map read back from the earbud (side + [key,func] pairs).
+export function applyGestureConfig(side: number, assignments: [number, number][]) {
+  const next = { ...chosen() };
+  for (const [key, func] of assignments) next[`${side}:${key}`] = func;
+  setChosen(next);
+}
 
 const SIDES = [
   { id: 0, name: 'Left' },

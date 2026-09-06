@@ -34,12 +34,14 @@ export type DeviceEvent =
   | { type: 'battery_update'; data: BatteryState }
   | { type: 'case_update'; data: CaseState }
   | { type: 'anc_mode_update'; data: AncMode }
+  | { type: 'anc_state_update'; data: { mode: AncMode; level: number } }
   | { type: 'game_mode_update'; data: boolean }
   | { type: 'wear_update'; data: WearState }
   | { type: 'eq_preset_update'; data: EqPreset }
   | { type: 'spatial_mode_update'; data: SpatialMode }
   | { type: 'dynamic_mode_update'; data: DynamicMode }
   | { type: 'eq_mode_update'; data: string }
+  | { type: 'gesture_config_update'; data: { side: number; assignments: [number, number][] } }
   | { type: 'connected' }
   | { type: 'disconnected' };
 

@@ -343,6 +343,13 @@ impl GestureFunction {
     }
 }
 
+/// One earbud's gesture assignments, as raw wire bytes (key, function) pairs.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct GestureConfig {
+    pub side: u8,
+    pub assignments: Vec<(u8, u8)>,
+}
+
 /// Events emitted from the device to the app (via Tauri `device-event`).
 /// Serialised as `{ "type": "<variant>", "data": <payload> }` for TypeScript.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -351,6 +358,12 @@ pub enum DeviceEvent {
     BatteryUpdate(BatteryState),
     CaseUpdate(CaseState),
     AncModeUpdate(AncMode),
+    /// ANC state from a query (AA 33): mode + strength level, so the UI reflects the
+    /// saved level instead of a default.
+    AncStateUpdate {
+        mode: AncMode,
+        level: u8,
+    },
     /// Game/low-latency mode — independent toggle, not a mutually-exclusive ANC state.
     GameModeUpdate(bool),
     WearUpdate(WearState),
@@ -358,6 +371,8 @@ pub enum DeviceEvent {
     SpatialModeUpdate(SpatialMode),
     DynamicModeUpdate(DynamicMode),
     EqModeUpdate(EqMode),
+    /// Full gesture map for one earbud (AA 8C query response).
+    GestureConfigUpdate(GestureConfig),
     Connected,
     Disconnected,
 }

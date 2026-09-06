@@ -3,7 +3,7 @@ import Sidebar, { type Tab } from './components/Sidebar';
 import HomeTab from './components/HomeTab';
 import AncTab from './components/AncTab';
 import SoundTab from './components/SoundTab';
-import GestureTab from './components/GestureTab';
+import GestureTab, { applyGestureConfig } from './components/GestureTab';
 import SettingsTab from './components/SettingsTab';
 import { initColorScheme } from './lib/scheme';
 import type { SpatialMode, DynamicMode } from './lib/tauri';
@@ -94,6 +94,13 @@ export default function App() {
       } else if (e.type === 'anc_mode_update') {
         setAncModeSignal(e.data);
         setAncLoading(null);
+      } else if (e.type === 'anc_state_update') {
+        // Reflect the saved mode and strength read back from the earbud.
+        setAncModeSignal(e.data.mode);
+        const lvl = Math.round(((e.data.level - 0x10) / (0xff - 0x10)) * 9 + 1);
+        setAncLevel(Math.min(10, Math.max(1, lvl)));
+        setAncLoading(null);
+        setAncLoading(null);
       } else if (e.type === 'game_mode_update') {
         setGameModeSignal(e.data);
       } else if (e.type === 'wear_update') {
@@ -102,6 +109,21 @@ export default function App() {
         setSpatialSignal(e.data);
       } else if (e.type === 'dynamic_mode_update') {
         setDynamicSignal(e.data);
+      } else if (e.type === 'gesture_config_update') {
+        applyGestureConfig(e.data.side, e.data.assignments);
+      } else if (e.type === 'eq_mode_update') {
+        // EqMode arrives as its snake_case name; map to the preset id the UI highlights.
+        const EQ_ID: Record<string, number> = {
+          baseus_classic: 0x00,
+          deep_bass: 0x01,
+          hi_fi_live: 0x03,
+          jazz: 0x07,
+          classical: 0x08,
+          treble_boost: 0x09,
+          acoustic: 0x0a,
+        };
+        const id = EQ_ID[e.data];
+        if (id !== undefined) setEqIdSignal(id);
       }
     }).then((fn) => unlisteners.push(fn));
 

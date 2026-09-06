@@ -104,6 +104,21 @@ pub async fn run_loop(app: AppHandle, mut cmd_rx: CommandReceiver) {
                 if let Err(e) = transport.send(&[0xBA, 0x05, 0x00]).await {
                     tracing::warn!("handshake send failed: {e}");
                 }
+                // Ask the earbud to report its current state, so the UI reflects reality
+                // instead of defaults. These queries make it emit 0x42 (spatial), 0x91
+                // (dynamic), 0x30 (eq), 0x23 (game), 0x33 (anc), 0x02/0x27 (battery).
+                for q in [
+                    [0xBA, 0x02].as_slice(),
+                    &[0xBA, 0x01],
+                    &[0xBA, 0x33],
+                    &[0xBA, 0x35],
+                    &[0xBA, 0x3B],
+                    &[0xBA, 0x42],
+                    &[0xBA, 0x8C, 0x00, 0xFF],
+                    &[0xBA, 0x8C, 0x01, 0xFF],
+                ] {
+                    let _ = transport.send(q).await;
+                }
 
                 notification_loop(&app, &mut transport, &mut cmd_rx, connected_model).await;
                 let _ = app.emit("connection-state", "disconnected");

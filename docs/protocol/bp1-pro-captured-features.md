@@ -58,3 +58,25 @@ look like per-slot reads, not the set command.
 - `0x92` was previously guessed to be "gesture-related" — that was wrong, it is
   Dynamic Sound.
 - Not captured: Dual-Device Connection, custom EQ band editing.
+
+
+## Reading current state (query responses)
+
+Sending these queries on connect makes the earbud report its saved state, which the
+app now reflects instead of showing defaults:
+
+- send `BA 02`, `BA 01`, `BA 33`, `BA 35`, `BA 3B`, `BA 42`, `BA 8C 00 FF`, `BA 8C 01 FF`
+
+Responses:
+
+| RX | meaning |
+|----|---------|
+| `AA 42 <mode>` | Spatial Audio (0=Normal,1=Music,2=Cinema) |
+| `AA 91 <mode> 03` | Dynamic Sound (0=Normal,1=Bass,2=Balance) |
+| `AA 30 <id>` | EQ mode preset id |
+| `AA 33 <mode> <level>` | ANC mode + strength level |
+| `AA 8C <side> <k0><f0><k1><f1><k2><f2><k3><f3>` | gesture map for one earbud |
+| `AA 02` / `AA 27` | earbud / case battery |
+
+This confirms every setting **persists** on the earbud — the settings were saving all
+along; the app simply wasn't reading them back.
