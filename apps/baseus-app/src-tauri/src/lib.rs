@@ -48,8 +48,16 @@ pub fn run() {
         .setup(|app| {
             tray::setup_tray(app.handle())?;
             scheme::watch(app.handle().clone());
+            // Show the window on a normal launch; only start hidden in the tray when
+            // autostarted with --minimized (the launch-at-login flag).
+            let start_hidden = std::env::args().any(|a| a == "--minimized");
             if let Some(window) = app.get_webview_window("main") {
-                let _ = window.hide();
+                if start_hidden {
+                    let _ = window.hide();
+                } else {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
             }
             let handle = app.handle().clone();
             tauri::async_runtime::spawn(device::run_loop(handle, cmd_rx));
